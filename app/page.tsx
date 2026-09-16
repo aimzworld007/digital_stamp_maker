@@ -12,142 +12,7 @@ export type ControlMode = 'normal' | 'advanced';
 // Border Styles
 export type BorderStyle = 'double' | 'single' | 'dashed' | 'dotted';
 
-interface StampPreset {
-  id: string;
-  name: string;
-  shape: StampShape;
-  stampColor: string;
-  arabicFont: string;
-  englishFont: string;
-  vintageIntensity: number;
-  topEnglishText: string;
-  topFontSize: number;
-  bottomArabicText: string;
-  bottomFontSize: number;
-  centerLine1: string;
-  centerLine1Size: number;
-  centerLine2: string;
-  centerLine2Size: number;
-  starSymbol: string;
-  starSize: number;
-}
 
-const OFFICIAL_PRESETS: StampPreset[] = [
-  {
-    id: 'halawa-technical',
-    name: 'Halawa Technical Services (Circle - Commercial)',
-    shape: 'circle',
-    stampColor: '#0b32a4',
-    arabicFont: "'Cairo', sans-serif",
-    englishFont: "'Roboto Condensed', sans-serif",
-    vintageIntensity: 0,
-    topEnglishText: 'HALAWA TECHNICAL SERVICES EST.',
-    topFontSize: 23,
-    bottomArabicText: 'مؤسسة حلاوة للخدمات الفنية',
-    bottomFontSize: 27,
-    centerLine1: 'P.O. BOX: 2235',
-    centerLine1Size: 32,
-    centerLine2: 'DUBAI - UAE',
-    centerLine2Size: 30,
-    starSymbol: '★',
-    starSize: 26,
-  },
-  {
-    id: 'dubai-ded',
-    name: 'Dubai Economy & Tourism (Circle - Government)',
-    shape: 'circle',
-    stampColor: '#0b32a4',
-    arabicFont: "'Cairo', sans-serif",
-    englishFont: "'Roboto Condensed', sans-serif",
-    vintageIntensity: 15,
-    topEnglishText: 'DEPARTMENT OF ECONOMY & TOURISM',
-    topFontSize: 21,
-    bottomArabicText: 'دائرة الاقتصاد والسياحة - حكومة دبي',
-    bottomFontSize: 25,
-    centerLine1: 'COMMERCIAL LICENSE: 584920',
-    centerLine1Size: 28,
-    centerLine2: 'GOVERNMENT OF DUBAI',
-    centerLine2Size: 27,
-    starSymbol: '✦',
-    starSize: 24,
-  },
-  {
-    id: 'saudi-cr-oval',
-    name: 'Ministry of Commerce - C.R. (Oval - Notary)',
-    shape: 'oval',
-    stampColor: '#065f46',
-    arabicFont: "'Cairo', sans-serif",
-    englishFont: "'Oswald', sans-serif",
-    vintageIntensity: 25,
-    topEnglishText: 'KINGDOM OF SAUDI ARABIA - C.R.',
-    topFontSize: 21,
-    bottomArabicText: 'المملكة العربية السعودية - السجل التجاري',
-    bottomFontSize: 24,
-    centerLine1: 'C.R. NO: 1010482910',
-    centerLine1Size: 26,
-    centerLine2: 'RIYADH - SAUDI ARABIA',
-    centerLine2Size: 24,
-    starSymbol: '❖',
-    starSize: 22,
-  },
-  {
-    id: 'certified-rectangle',
-    name: 'Certified True Copy (Rectangle - Attestation)',
-    shape: 'rectangle',
-    stampColor: '#991b1b',
-    arabicFont: "'Cairo', sans-serif",
-    englishFont: "'Roboto Condensed', sans-serif",
-    vintageIntensity: 20,
-    topEnglishText: 'CERTIFIED TRUE COPY & OFFICIAL',
-    topFontSize: 22,
-    bottomArabicText: 'صورة طبق الأصل معتمدة رسمياً',
-    bottomFontSize: 25,
-    centerLine1: 'VERIFIED & ATTESTED',
-    centerLine1Size: 28,
-    centerLine2: 'LEGAL TRANSLATION DEPT.',
-    centerLine2Size: 24,
-    starSymbol: '✔',
-    starSize: 24,
-  },
-  {
-    id: 'qc-pass-square',
-    name: 'Quality Assurance & QC Pass (Square - Inspection)',
-    shape: 'square',
-    stampColor: '#1e293b',
-    arabicFont: "'Cairo', sans-serif",
-    englishFont: "'Oswald', sans-serif",
-    vintageIntensity: 35,
-    topEnglishText: 'QUALITY ASSURANCE & QC PASSED',
-    topFontSize: 21,
-    bottomArabicText: 'إدارة الجودة والمواصفات والمقاييس',
-    bottomFontSize: 24,
-    centerLine1: 'INSPECTION ID: QC-9481',
-    centerLine1Size: 26,
-    centerLine2: 'BATCH VERIFIED 2026',
-    centerLine2Size: 24,
-    starSymbol: '✪',
-    starSize: 24,
-  },
-  {
-    id: 'dubai-commercial-llc',
-    name: 'Al Etihad General Trading L.L.C (Circle - Official LLC)',
-    shape: 'circle',
-    stampColor: '#0b32a4',
-    arabicFont: "'Cairo', sans-serif",
-    englishFont: "'Roboto Condensed', sans-serif",
-    vintageIntensity: 0,
-    topEnglishText: 'AL ETIHAD GENERAL TRADING L.L.C',
-    topFontSize: 22,
-    bottomArabicText: 'شركة الاتحاد للتجارة العامة ش.ذ.م.م',
-    bottomFontSize: 26,
-    centerLine1: 'CR: 628941 • DUBAI',
-    centerLine1Size: 30,
-    centerLine2: 'TEL: +971 4 2884910',
-    centerLine2Size: 26,
-    starSymbol: '★',
-    starSize: 26,
-  },
-];
 
 export default function BilingualStampConstructor() {
   // Mode Switcher: Normal (Essential) vs Customize / Advanced
@@ -156,8 +21,6 @@ export default function BilingualStampConstructor() {
   // Shape State
   const [shape, setShape] = useState<StampShape>('circle');
 
-  // Selected preset tracking
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('halawa-technical');
 
   // Basic (Normal Mode) Controls
   const [stampColor, setStampColor] = useState<string>('#0b32a4');
@@ -177,9 +40,6 @@ export default function BilingualStampConstructor() {
   const [autoTranslateEnabled, setAutoTranslateEnabled] = useState<boolean>(true);
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
   const [translationStatus, setTranslationStatus] = useState<string>('');
-  // Arabic curved arc controls: upright view & natural Right-to-Left Arabic flow
-  const [arabicReadingOrder, setArabicReadingOrder] = useState<'rtl' | 'ltr'>('rtl');
-  const [arabicArcOrientation, setArabicArcOrientation] = useState<'upright' | 'inverted'>('upright');
   const translationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Center Content Lines
@@ -189,6 +49,9 @@ export default function BilingualStampConstructor() {
   const [centerLine2Size, setCenterLine2Size] = useState<number>(30);
   const [starSymbol, setStarSymbol] = useState<string>('★');
   const [starSize, setStarSize] = useState<number>(26);
+  // Side Separators alignment adjust: Left to Right (spacing/offset) and Up to Down (vertical offset)
+  const [starOffsetX, setStarOffsetX] = useState<number>(0); // -40 (closer/inward) to +40 (wider/outward)
+  const [starOffsetY, setStarOffsetY] = useState<number>(0); // -50 (up) to +50 (down)
 
   // -------------------------------------------------------------
   // ADVANCED / CUSTOMIZE MODE FEATURES (OPTIONAL)
@@ -273,27 +136,6 @@ export default function BilingualStampConstructor() {
     translateToOfficialArabic(topEnglishText);
   };
 
-  // Preset selector handler
-  const handleSelectPreset = (presetId: string) => {
-    const preset = OFFICIAL_PRESETS.find((p) => p.id === presetId);
-    if (!preset) return;
-    setSelectedPresetId(preset.id);
-    setShape(preset.shape);
-    setStampColor(preset.stampColor);
-    setArabicFont(preset.arabicFont);
-    setEnglishFont(preset.englishFont);
-    setVintageIntensity(preset.vintageIntensity);
-    setTopEnglishText(preset.topEnglishText);
-    setTopFontSize(preset.topFontSize);
-    setBottomArabicText(preset.bottomArabicText);
-    setBottomFontSize(preset.bottomFontSize);
-    setCenterLine1(preset.centerLine1);
-    setCenterLine1Size(preset.centerLine1Size);
-    setCenterLine2(preset.centerLine2);
-    setCenterLine2Size(preset.centerLine2Size);
-    setStarSymbol(preset.starSymbol);
-    setStarSize(preset.starSize);
-  };
 
   // Quick Random Tilt
   const applyRandomTilt = () => {
@@ -432,18 +274,11 @@ export default function BilingualStampConstructor() {
   // -------------------------------------------------------------
   const renderStampContent = () => {
     const showSecondaryRing = borderStyle === 'double';
-    const isUprightArc = arabicArcOrientation === 'upright';
 
-    // Compute curved Arabic text:
-    // On an upright LTR SVG path (sweep=0), reversing the word order places the first Arabic word
-    // on the visual Right side of the bottom arc, so an Arabic speaker reads naturally from Right to Left!
-    const activeCurvedArabicText = (() => {
-      if (!bottomArabicText) return '';
-      if (arabicReadingOrder === 'rtl') {
-        return bottomArabicText.trim().split(/\s+/).reverse().join(' ');
-      }
-      return bottomArabicText;
-    })();
+    // Arabic text on curved arc: permanently starts from the Right side and flows Right-to-Left in upright orientation
+    const activeCurvedArabicText = bottomArabicText
+      ? bottomArabicText.trim().split(/\s+/).reverse().join(' ')
+      : '';
 
     switch (shape) {
       case 'oval':
@@ -452,12 +287,8 @@ export default function BilingualStampConstructor() {
             <defs>
               {/* Top Oval Arc for English (Clockwise) */}
               <path id="topOvalArc" d="M 60,250 A 190,125 0 0,1 440,250" fill="none" />
-              {/* Bottom Oval Arc for Arabic: Upright arc (sweep=0) or legacy inverted arc */}
-              {isUprightArc ? (
-                <path id="bottomOvalArc" d="M 45,250 A 205,140 0 0,0 455,250" fill="none" />
-              ) : (
-                <path id="bottomOvalArc" d="M 440,250 A 190,125 0 0,1 60,250" fill="none" />
-              )}
+              {/* Bottom Oval Arc for Arabic (Permanently Upright Arc, Starts from Right side) */}
+              <path id="bottomOvalArc" d="M 45,250 A 205,140 0 0,0 455,250" fill="none" />
             </defs>
 
             {/* Inverted Background fill if enabled */}
@@ -501,10 +332,24 @@ export default function BilingualStampConstructor() {
             </text>
 
             {/* Side Stars */}
-            <text x="68" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              x={68 - starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
-            <text x="432" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              x={432 + starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
 
@@ -613,10 +458,24 @@ export default function BilingualStampConstructor() {
             </text>
 
             {/* Side Stars */}
-            <text x="85" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              x={85 - starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
-            <text x="415" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              x={415 + starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
 
@@ -742,10 +601,24 @@ export default function BilingualStampConstructor() {
             </text>
 
             {/* Side Stars */}
-            <text x="96" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              x={96 - starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
-            <text x="404" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              x={404 + starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
 
@@ -833,12 +706,8 @@ export default function BilingualStampConstructor() {
             <defs>
               {/* Top Curve Path (Clockwise Arc for Top English) */}
               <path id="topArcPath" d="M 68,250 A 182,182 0 0,1 432,250" fill="none" />
-              {/* Bottom Curve Path: Upright Arc (sweep=0) or legacy inverted arc */}
-              {isUprightArc ? (
-                <path id="bottomArcPath" d="M 45,250 A 205,205 0 0,0 455,250" fill="none" />
-              ) : (
-                <path id="bottomArcPath" d="M 432,250 A 182,182 0 0,1 68,250" fill="none" />
-              )}
+              {/* Bottom Curve Path for Arabic (Permanently Upright Arc, Starts from Right side) */}
+              <path id="bottomArcPath" d="M 45,250 A 205,205 0 0,0 455,250" fill="none" />
             </defs>
 
             {invertStamp && (
@@ -880,10 +749,26 @@ export default function BilingualStampConstructor() {
             </text>
 
             {/* SIDE SEPARATOR STARS */}
-            <text id="starLeft" x="78" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              id="starLeft"
+              x={78 - starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
-            <text id="starRight" x="422" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
+            <text
+              id="starRight"
+              x={422 + starOffsetX}
+              y={258 + starOffsetY}
+              fontFamily="Arial, sans-serif"
+              fontSize={starSize}
+              fill={fgColor}
+              textAnchor="middle"
+            >
               {starSymbol}
             </text>
 
@@ -1039,24 +924,6 @@ export default function BilingualStampConstructor() {
             </div>
           </div>
 
-          {/* Official Stamp Presets */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Official Template Preset
-            </div>
-            <select
-              id="officialPresetSelect"
-              value={selectedPresetId}
-              onChange={(e) => handleSelectPreset(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white font-medium focus:border-blue-700 focus:outline-none cursor-pointer"
-            >
-              {OFFICIAL_PRESETS.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name}
-                </option>
-              ))}
-            </select>
-          </div>
 
           {/* ========================================================= */}
           {/* NORMAL MODE: CORE ESSENTIAL CONTROLS                      */}
@@ -1217,39 +1084,8 @@ export default function BilingualStampConstructor() {
                     Bottom Text (Arabic)
                   </div>
                   <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">
-                    ✓ Upright & Natural RTL
+                    Starts from Right • Upright
                   </span>
-                </div>
-
-                {/* Direct Controls for Arabic Orientation & Reading Flow */}
-                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setArabicReadingOrder(arabicReadingOrder === 'rtl' ? 'ltr' : 'rtl')}
-                    className={`text-[9.5px] py-1 px-1.5 rounded font-semibold border transition cursor-pointer flex items-center justify-center gap-1 ${
-                      arabicReadingOrder === 'rtl'
-                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-                    }`}
-                    title="Toggle between Right-to-Left (Official Arabic standard) and Left-to-Right (Clockwise)"
-                  >
-                    <span>Flow:</span>
-                    <span className="font-bold">{arabicReadingOrder === 'rtl' ? 'Right → Left' : 'Left → Right'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setArabicArcOrientation(arabicArcOrientation === 'upright' ? 'inverted' : 'upright')}
-                    className={`text-[9.5px] py-1 px-1.5 rounded font-semibold border transition cursor-pointer flex items-center justify-center gap-1 ${
-                      arabicArcOrientation === 'upright'
-                        ? 'bg-blue-700 text-white border-blue-700 shadow-xs'
-                        : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
-                    }`}
-                    title="Toggle between Upright readable text and Inverted rim text"
-                  >
-                    <span>Arc:</span>
-                    <span className="font-bold">{arabicArcOrientation === 'upright' ? 'Upright' : 'Inverted'}</span>
-                  </button>
                 </div>
 
                 <input
@@ -1345,9 +1181,24 @@ export default function BilingualStampConstructor() {
 
               {/* Card 6: Side Separators */}
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-                  Side Separators
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    Side Separators
+                  </div>
+                  {(starOffsetX !== 0 || starOffsetY !== 0) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStarOffsetX(0);
+                        setStarOffsetY(0);
+                      }}
+                      className="text-[10px] text-blue-700 hover:text-blue-900 font-semibold underline cursor-pointer"
+                    >
+                      Reset Alignment
+                    </button>
+                  )}
                 </div>
+
                 <div className="flex items-center justify-between gap-2.5">
                   <label htmlFor="starSymbol" className="text-xs font-semibold text-slate-700">
                     Left/Right Symbol
@@ -1360,6 +1211,7 @@ export default function BilingualStampConstructor() {
                     className="w-[60px] text-center p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
                   />
                 </div>
+
                 <div className="flex items-center justify-between">
                   <label htmlFor="starSize" className="text-xs font-semibold text-slate-700">
                     Symbol Size
@@ -1377,6 +1229,62 @@ export default function BilingualStampConstructor() {
                   onChange={(e) => setStarSize(parseInt(e.target.value, 10))}
                   className="w-full cursor-pointer accent-blue-700"
                 />
+
+                {/* Horizontal Alignment Adjust: Left to Right / Spacing */}
+                <div className="pt-1 border-t border-slate-200 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="starOffsetX" className="text-xs font-semibold text-slate-700">
+                      Align Left ↔ Right (Spacing)
+                    </label>
+                    <span id="starOffsetXVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                      {starOffsetX === 0 ? 'Center (0)' : starOffsetX > 0 ? `+${starOffsetX} (Wider)` : `${starOffsetX} (Closer)`}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    id="starOffsetX"
+                    min="-40"
+                    max="40"
+                    step="1"
+                    value={starOffsetX}
+                    onChange={(e) => setStarOffsetX(parseInt(e.target.value, 10))}
+                    className="w-full cursor-pointer accent-blue-700"
+                    title="Move side separators inward or outward (Left to Right spacing)"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500 font-medium px-0.5">
+                    <span>← Inward</span>
+                    <span>Centered</span>
+                    <span>Outward →</span>
+                  </div>
+                </div>
+
+                {/* Vertical Alignment Adjust: Up to Down */}
+                <div className="pt-1 border-t border-slate-200 flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="starOffsetY" className="text-xs font-semibold text-slate-700">
+                      Align Up ↕ Down (Vertical)
+                    </label>
+                    <span id="starOffsetYVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                      {starOffsetY === 0 ? 'Middle (0)' : starOffsetY > 0 ? `+${starOffsetY} (Down)` : `${starOffsetY} (Up)`}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    id="starOffsetY"
+                    min="-45"
+                    max="45"
+                    step="1"
+                    value={starOffsetY}
+                    onChange={(e) => setStarOffsetY(parseInt(e.target.value, 10))}
+                    className="w-full cursor-pointer accent-blue-700"
+                    title="Move side separators Up or Down"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500 font-medium px-0.5">
+                    <span>↑ Up</span>
+                    <span>Middle</span>
+                    <span>Down ↓</span>
+                  </div>
+                </div>
               </div>
             </>
           )}
