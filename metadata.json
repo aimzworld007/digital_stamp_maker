@@ -1,0 +1,6 @@
+{
+  "name": "Bilingual Stamp Maker",
+  "description": "Design, customize, and export interactive bilingual rubber stamps with realistic vintage ink distress and high-resolution vector export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
