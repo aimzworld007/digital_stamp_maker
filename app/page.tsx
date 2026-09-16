@@ -1,9 +1,16 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 // Supported Stamp Shapes
 export type StampShape = 'circle' | 'rectangle' | 'oval' | 'square';
+
+// Control Modes
+export type ControlMode = 'normal' | 'advanced';
+
+// Border Styles
+export type BorderStyle = 'double' | 'single' | 'dashed' | 'dotted';
 
 interface StampPreset {
   id: string;
@@ -13,9 +20,9 @@ interface StampPreset {
   arabicFont: string;
   englishFont: string;
   vintageIntensity: number;
-  topText: string;
+  topEnglishText: string;
   topFontSize: number;
-  bottomText: string;
+  bottomArabicText: string;
   bottomFontSize: number;
   centerLine1: string;
   centerLine1Size: number;
@@ -34,10 +41,10 @@ const OFFICIAL_PRESETS: StampPreset[] = [
     arabicFont: "'Cairo', sans-serif",
     englishFont: "'Roboto Condensed', sans-serif",
     vintageIntensity: 0,
-    topText: 'مؤسسة حلاوة للخدمات الفنية',
-    topFontSize: 28,
-    bottomText: 'HALAWA TECHNICAL SERVICES EST.',
-    bottomFontSize: 22,
+    topEnglishText: 'HALAWA TECHNICAL SERVICES EST.',
+    topFontSize: 23,
+    bottomArabicText: 'مؤسسة حلاوة للخدمات الفنية',
+    bottomFontSize: 27,
     centerLine1: 'P.O. BOX: 2235',
     centerLine1Size: 32,
     centerLine2: 'DUBAI - UAE',
@@ -53,10 +60,10 @@ const OFFICIAL_PRESETS: StampPreset[] = [
     arabicFont: "'Cairo', sans-serif",
     englishFont: "'Roboto Condensed', sans-serif",
     vintageIntensity: 15,
-    topText: 'دائرة الاقتصاد والسياحة - حكومة دبي',
-    topFontSize: 26,
-    bottomText: 'DEPARTMENT OF ECONOMY & TOURISM',
-    bottomFontSize: 21,
+    topEnglishText: 'DEPARTMENT OF ECONOMY & TOURISM',
+    topFontSize: 21,
+    bottomArabicText: 'دائرة الاقتصاد والسياحة - حكومة دبي',
+    bottomFontSize: 25,
     centerLine1: 'COMMERCIAL LICENSE: 584920',
     centerLine1Size: 28,
     centerLine2: 'GOVERNMENT OF DUBAI',
@@ -72,10 +79,10 @@ const OFFICIAL_PRESETS: StampPreset[] = [
     arabicFont: "'Cairo', sans-serif",
     englishFont: "'Oswald', sans-serif",
     vintageIntensity: 25,
-    topText: 'المملكة العربية السعودية - السجل التجاري',
-    topFontSize: 24,
-    bottomText: 'KINGDOM OF SAUDI ARABIA - C.R.',
-    bottomFontSize: 20,
+    topEnglishText: 'KINGDOM OF SAUDI ARABIA - C.R.',
+    topFontSize: 21,
+    bottomArabicText: 'المملكة العربية السعودية - السجل التجاري',
+    bottomFontSize: 24,
     centerLine1: 'C.R. NO: 1010482910',
     centerLine1Size: 26,
     centerLine2: 'RIYADH - SAUDI ARABIA',
@@ -91,10 +98,10 @@ const OFFICIAL_PRESETS: StampPreset[] = [
     arabicFont: "'Cairo', sans-serif",
     englishFont: "'Roboto Condensed', sans-serif",
     vintageIntensity: 20,
-    topText: 'صورة طبق الأصل معتمدة رسمياً',
-    topFontSize: 24,
-    bottomText: 'CERTIFIED TRUE COPY & OFFICIAL',
-    bottomFontSize: 20,
+    topEnglishText: 'CERTIFIED TRUE COPY & OFFICIAL',
+    topFontSize: 22,
+    bottomArabicText: 'صورة طبق الأصل معتمدة رسمياً',
+    bottomFontSize: 25,
     centerLine1: 'VERIFIED & ATTESTED',
     centerLine1Size: 28,
     centerLine2: 'LEGAL TRANSLATION DEPT.',
@@ -110,10 +117,10 @@ const OFFICIAL_PRESETS: StampPreset[] = [
     arabicFont: "'Cairo', sans-serif",
     englishFont: "'Oswald', sans-serif",
     vintageIntensity: 35,
-    topText: 'إدارة الجودة والمواصفات والمقاييس',
-    topFontSize: 24,
-    bottomText: 'QUALITY ASSURANCE & QC PASSED',
-    bottomFontSize: 20,
+    topEnglishText: 'QUALITY ASSURANCE & QC PASSED',
+    topFontSize: 21,
+    bottomArabicText: 'إدارة الجودة والمواصفات والمقاييس',
+    bottomFontSize: 24,
     centerLine1: 'INSPECTION ID: QC-9481',
     centerLine1Size: 26,
     centerLine2: 'BATCH VERIFIED 2026',
@@ -121,43 +128,148 @@ const OFFICIAL_PRESETS: StampPreset[] = [
     starSymbol: '✪',
     starSize: 24,
   },
+  {
+    id: 'dubai-commercial-llc',
+    name: 'Al Etihad General Trading L.L.C (Circle - Official LLC)',
+    shape: 'circle',
+    stampColor: '#0b32a4',
+    arabicFont: "'Cairo', sans-serif",
+    englishFont: "'Roboto Condensed', sans-serif",
+    vintageIntensity: 0,
+    topEnglishText: 'AL ETIHAD GENERAL TRADING L.L.C',
+    topFontSize: 22,
+    bottomArabicText: 'شركة الاتحاد للتجارة العامة ش.ذ.م.م',
+    bottomFontSize: 26,
+    centerLine1: 'CR: 628941 • DUBAI',
+    centerLine1Size: 30,
+    centerLine2: 'TEL: +971 4 2884910',
+    centerLine2Size: 26,
+    starSymbol: '★',
+    starSize: 26,
+  },
 ];
 
 export default function BilingualStampConstructor() {
+  // Mode Switcher: Normal (Essential) vs Customize / Advanced
+  const [controlMode, setControlMode] = useState<ControlMode>('normal');
+
   // Shape State
   const [shape, setShape] = useState<StampShape>('circle');
 
   // Selected preset tracking
   const [selectedPresetId, setSelectedPresetId] = useState<string>('halawa-technical');
 
-  // Color & Fonts
+  // Basic (Normal Mode) Controls
   const [stampColor, setStampColor] = useState<string>('#0b32a4');
   const [arabicFont, setArabicFont] = useState<string>("'Cairo', sans-serif");
   const [englishFont, setEnglishFont] = useState<string>("'Roboto Condensed', sans-serif");
-
-  // Vintage Distress Texture (0% - 100%)
   const [vintageIntensity, setVintageIntensity] = useState<number>(0);
 
-  // Top Curved Arabic Text
-  const [topText, setTopText] = useState<string>('مؤسسة حلاوة للخدمات الفنية');
-  const [topFontSize, setTopFontSize] = useState<number>(28);
+  // TEXT CONFIGURATION:
+  // Top Text is English (Header/Top arc)
+  // Bottom Text is Arabic (Footer/Bottom arc)
+  const [topEnglishText, setTopEnglishText] = useState<string>('HALAWA TECHNICAL SERVICES EST.');
+  const [topFontSize, setTopFontSize] = useState<number>(23);
+  const [bottomArabicText, setBottomArabicText] = useState<string>('مؤسسة حلاوة للخدمات الفنية');
+  const [bottomFontSize, setBottomFontSize] = useState<number>(27);
 
-  // Bottom Curved English Text
-  const [bottomText, setBottomText] = useState<string>('HALAWA TECHNICAL SERVICES EST.');
-  const [bottomFontSize, setBottomFontSize] = useState<number>(22);
+  // Auto-Translation State
+  const [autoTranslateEnabled, setAutoTranslateEnabled] = useState<boolean>(true);
+  const [isTranslating, setIsTranslating] = useState<boolean>(false);
+  const [translationStatus, setTranslationStatus] = useState<string>('');
+  const [reverseArabicText, setReverseArabicText] = useState<boolean>(false);
+  const translationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Center Content Lines
   const [centerLine1, setCenterLine1] = useState<string>('P.O. BOX: 2235');
   const [centerLine1Size, setCenterLine1Size] = useState<number>(32);
   const [centerLine2, setCenterLine2] = useState<string>('DUBAI - UAE');
   const [centerLine2Size, setCenterLine2Size] = useState<number>(30);
-
-  // Side Separators
   const [starSymbol, setStarSymbol] = useState<string>('★');
   const [starSize, setStarSize] = useState<number>(26);
 
-  // SVG ref for high-res export
+  // -------------------------------------------------------------
+  // ADVANCED / CUSTOMIZE MODE FEATURES (OPTIONAL)
+  // -------------------------------------------------------------
+  // Stamp Rotation Angle (-25° to +25°)
+  const [rotationAngle, setRotationAngle] = useState<number>(0);
+
+  // Stamp Ink Opacity (30% to 100%)
+  const [inkOpacity, setInkOpacity] = useState<number>(100);
+
+  // Date Ribbon in Center (Optional)
+  const [includeDate, setIncludeDate] = useState<boolean>(false);
+  const [dateValue, setDateValue] = useState<string>('16 SEP 2026');
+  const [dateFontSize, setDateFontSize] = useState<number>(20);
+
+  // Border Style (Double, Single, Dashed, Dotted)
+  const [borderStyle, setBorderStyle] = useState<BorderStyle>('double');
+
+  // Center Official Emblem (Optional)
+  const [includeEmblem, setIncludeEmblem] = useState<boolean>(false);
+  const [selectedEmblem, setSelectedEmblem] = useState<string>('eagle');
+
+  // Inverted Stamp Mode (Solid filled stamp)
+  const [invertStamp, setInvertStamp] = useState<boolean>(false);
+
+  // Paper Document Mockup in Preview
+  const [paperMockup, setPaperMockup] = useState<boolean>(false);
+
+  // SVG ref for export
   const svgRef = useRef<SVGSVGElement | null>(null);
+
+  // -------------------------------------------------------------
+  // TRANSLATION & CONVERSION ENGINE: English -> Phonetic / Official Arabic
+  // -------------------------------------------------------------
+  const translateToOfficialArabic = async (textToTranslate: string) => {
+    if (!textToTranslate.trim()) return;
+    setIsTranslating(true);
+    setTranslationStatus('Converting to Arabic...');
+
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: textToTranslate }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Translation failed');
+      }
+
+      const data = await res.json();
+      if (data.arabic) {
+        setBottomArabicText(data.arabic);
+        setTranslationStatus('Converted to Arabic');
+        setTimeout(() => setTranslationStatus(''), 3000);
+      }
+    } catch (err) {
+      console.error('Translation error:', err);
+      setTranslationStatus('Conversion error');
+      setTimeout(() => setTranslationStatus(''), 3000);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Handle English input change with debounced auto-translation
+  const handleEnglishChange = (value: string) => {
+    setTopEnglishText(value);
+
+    if (autoTranslateEnabled) {
+      if (translationTimeoutRef.current) {
+        clearTimeout(translationTimeoutRef.current);
+      }
+      translationTimeoutRef.current = setTimeout(() => {
+        translateToOfficialArabic(value);
+      }, 700);
+    }
+  };
+
+  // Manual Trigger translation button
+  const handleManualTranslate = () => {
+    translateToOfficialArabic(topEnglishText);
+  };
 
   // Preset selector handler
   const handleSelectPreset = (presetId: string) => {
@@ -169,9 +281,9 @@ export default function BilingualStampConstructor() {
     setArabicFont(preset.arabicFont);
     setEnglishFont(preset.englishFont);
     setVintageIntensity(preset.vintageIntensity);
-    setTopText(preset.topText);
+    setTopEnglishText(preset.topEnglishText);
     setTopFontSize(preset.topFontSize);
-    setBottomText(preset.bottomText);
+    setBottomArabicText(preset.bottomArabicText);
     setBottomFontSize(preset.bottomFontSize);
     setCenterLine1(preset.centerLine1);
     setCenterLine1Size(preset.centerLine1Size);
@@ -179,6 +291,13 @@ export default function BilingualStampConstructor() {
     setCenterLine2Size(preset.centerLine2Size);
     setStarSymbol(preset.starSymbol);
     setStarSize(preset.starSize);
+  };
+
+  // Quick Random Tilt
+  const applyRandomTilt = () => {
+    const angles = [-6, -4, -3, -2, 2, 3, 5, 7];
+    const rand = angles[Math.floor(Math.random() * angles.length)];
+    setRotationAngle(rand);
   };
 
   // -------------------------------------------------------------
@@ -217,14 +336,13 @@ export default function BilingualStampConstructor() {
   const exportPNG = async () => {
     if (!svgRef.current) return;
 
-    // Ensure web fonts are rendered
     if (document.fonts) {
       await document.fonts.ready;
     }
 
     const svgString = getSvgString();
     const canvas = document.createElement('canvas');
-    const exportSize = 1200; // Ultra High Resolution
+    const exportSize = 1200;
     canvas.width = exportSize;
     canvas.height = exportSize;
     const ctx = canvas.getContext('2d');
@@ -248,153 +366,318 @@ export default function BilingualStampConstructor() {
     img.src = url;
   };
 
+  // Helper for stroke-dasharray based on border style
+  const getStrokeDash = () => {
+    if (borderStyle === 'dashed') return '10, 6';
+    if (borderStyle === 'dotted') return '3, 6';
+    return undefined;
+  };
+
+  // Center Emblem SVG elements
+  const renderEmblem = (cx: number, cy: number, scale: number = 1) => {
+    if (!includeEmblem) return null;
+    const color = invertStamp ? '#ffffff' : stampColor;
+    return (
+      <g transform={`translate(${cx}, ${cy}) scale(${scale})`}>
+        {selectedEmblem === 'eagle' && (
+          // Official Falcon / Eagle Emblem
+          <g fill={color} stroke={color} strokeWidth="0.5">
+            <path d="M-18,-6 C-12,-16 0,-18 0,-18 C0,-18 12,-16 18,-6 C12,-8 4,-6 0,-2 C-4,-6 -12,-8 -18,-6 Z" />
+            <path d="M-22,-2 C-14,4 -8,12 0,16 C8,12 14,4 22,-2 C16,4 10,8 0,8 C-10,8 -16,4 -22,-2 Z" />
+            <circle cx="0" cy="-10" r="3" />
+            <polygon points="-6,10 6,10 0,18" />
+          </g>
+        )}
+        {selectedEmblem === 'scales' && (
+          // Scales of Justice Emblem
+          <g stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round">
+            <line x1="0" y1="-16" x2="0" y2="16" />
+            <line x1="-18" y1="-10" x2="18" y2="-10" />
+            <line x1="-18" y1="-10" x2="-22" y2="0" />
+            <line x1="-18" y1="-10" x2="-14" y2="0" />
+            <path d="M-24,0 C-24,6 -12,6 -12,0 Z" fill={color} />
+            <line x1="18" y1="-10" x2="14" y2="0" />
+            <line x1="18" y1="-10" x2="22" y2="0" />
+            <path d="M12,0 C12,6 24,6 24,0 Z" fill={color} />
+            <line x1="-8" y1="16" x2="8" y2="16" strokeWidth="2" />
+          </g>
+        )}
+        {selectedEmblem === 'shield' && (
+          // Security Shield Emblem
+          <g fill="none" stroke={color} strokeWidth="2">
+            <path d="M-14,-14 L14,-14 C14,-14 16,4 0,18 C-16,4 -14,-14 -14,-14 Z" fill={color} fillOpacity="0.15" />
+            <polyline points="-5,1 -1,5 7,-3" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+        )}
+        {selectedEmblem === 'palm' && (
+          // Palm & Dual Swords Emblem
+          <g stroke={color} strokeWidth="1.5" fill={color}>
+            <path d="M-12,12 L12,4 M12,12 L-12,4" strokeWidth="2" strokeLinecap="round" />
+            <path d="M0,8 C0,-4 -12,-12 -12,-12 C-12,-12 -4,-8 0,0 C4,-8 12,-12 12,-12 C12,-12 0,-4 0,8 Z" />
+          </g>
+        )}
+      </g>
+    );
+  };
+
+  // Active ink fill/stroke color (handling negative inverted mode)
+  const fgColor = invertStamp ? '#ffffff' : stampColor;
+  const strokeDash = getStrokeDash();
+
   // -------------------------------------------------------------
   // SHAPE-BASED SVG GEOMETRIES
+  // Top Text is English | Bottom Text is Arabic
   // -------------------------------------------------------------
   const renderStampContent = () => {
+    const showSecondaryRing = borderStyle === 'double';
+    // If reverseArabicText is toggled, reverse the characters (supports grapheme clustering)
+    const activeArabicText = reverseArabicText
+      ? Array.from(bottomArabicText).reverse().join('')
+      : bottomArabicText;
+
     switch (shape) {
       case 'oval':
         return (
           <>
-            {/* Defs for Oval arcs */}
             <defs>
-              {/* Top Oval Arc */}
+              {/* Top Oval Arc for English (Clockwise) */}
               <path id="topOvalArc" d="M 60,250 A 190,125 0 0,1 440,250" fill="none" />
-              {/* Bottom Oval Arc */}
-              <path id="bottomOvalArc" d="M 60,250 A 190,125 0 0,0 440,250" fill="none" />
+              {/* Bottom Oval Arc for Arabic (RTL curve from Right to Left) */}
+              <path id="bottomOvalArc" d="M 440,250 A 190,125 0 0,1 60,250" fill="none" />
             </defs>
 
-            {/* Outer Thick Oval */}
-            <ellipse cx="250" cy="250" rx="232" ry="160" fill="none" stroke={stampColor} strokeWidth="5" />
-            {/* Outer Thin Oval */}
-            <ellipse cx="250" cy="250" rx="222" ry="150" fill="none" stroke={stampColor} strokeWidth="2" />
-            {/* Inner Oval */}
-            <ellipse cx="250" cy="250" rx="160" ry="100" fill="none" stroke={stampColor} strokeWidth="3" />
+            {/* Inverted Background fill if enabled */}
+            {invertStamp && (
+              <ellipse cx="250" cy="250" rx="232" ry="160" fill={stampColor} />
+            )}
 
-            {/* Top Text (Arabic Curve) */}
-            <text fontFamily={arabicFont} fontWeight="bold" fill={stampColor}>
+            {/* Outer Thick Oval */}
+            <ellipse
+              cx="250"
+              cy="250"
+              rx="232"
+              ry="160"
+              fill="none"
+              stroke={fgColor}
+              strokeWidth="5"
+              strokeDasharray={strokeDash}
+            />
+            {/* Outer Thin Oval */}
+            {showSecondaryRing && (
+              <ellipse cx="250" cy="250" rx="222" ry="150" fill="none" stroke={fgColor} strokeWidth="2" />
+            )}
+            {/* Inner Oval */}
+            <ellipse cx="250" cy="250" rx="160" ry="100" fill="none" stroke={fgColor} strokeWidth="3" />
+
+            {/* Optional Emblem */}
+            {renderEmblem(250, 185, 0.9)}
+
+            {/* TOP TEXT: ENGLISH CURVE */}
+            <text fontFamily={englishFont} fontWeight="bold" fill={fgColor} letterSpacing="1px">
               <textPath href="#topOvalArc" startOffset="50%" textAnchor="middle" fontSize={topFontSize}>
-                {topText}
+                {topEnglishText}
               </textPath>
             </text>
 
-            {/* Bottom Text (English Curve) */}
-            <text fontFamily={englishFont} fontWeight="bold" fill={stampColor} letterSpacing="1px">
+            {/* BOTTOM TEXT: ARABIC CURVE */}
+            <text fontFamily={arabicFont} fontWeight="bold" fill={fgColor}>
               <textPath href="#bottomOvalArc" startOffset="50%" textAnchor="middle" fontSize={bottomFontSize}>
-                {bottomText}
+                {activeArabicText}
               </textPath>
             </text>
 
             {/* Side Stars */}
-            <text x="68" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            <text x="68" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
-            <text x="432" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            <text x="432" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
 
             {/* Center Content Lines */}
             <text
               x="250"
-              y="235"
+              y={includeEmblem ? 230 : 225}
               fontFamily={englishFont}
               fontWeight="bold"
               fontSize={centerLine1Size}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
               letterSpacing="1px"
             >
               {centerLine1}
             </text>
-            <text
-              x="250"
-              y="278"
-              fontFamily={englishFont}
-              fontWeight="bold"
-              fontSize={centerLine2Size}
-              fill={stampColor}
-              textAnchor="middle"
-              letterSpacing="1px"
-            >
-              {centerLine2}
-            </text>
+
+            {includeDate ? (
+              <g>
+                <line x1="165" y1="248" x2="335" y2="248" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="266"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={dateFontSize}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1.5px"
+                >
+                  {dateValue}
+                </text>
+                <line x1="165" y1="274" x2="335" y2="274" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="298"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={centerLine2Size * 0.9}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1px"
+                >
+                  {centerLine2}
+                </text>
+              </g>
+            ) : (
+              <text
+                x="250"
+                y={includeEmblem ? 275 : 272}
+                fontFamily={englishFont}
+                fontWeight="bold"
+                fontSize={centerLine2Size}
+                fill={fgColor}
+                textAnchor="middle"
+                letterSpacing="1px"
+              >
+                {centerLine2}
+              </text>
+            )}
           </>
         );
 
       case 'rectangle':
         return (
           <>
+            {invertStamp && (
+              <rect x="25" y="80" width="450" height="340" rx="14" fill={stampColor} />
+            )}
+
             {/* Outer Thick Rectangle */}
-            <rect x="25" y="80" width="450" height="340" rx="14" fill="none" stroke={stampColor} strokeWidth="5" />
+            <rect
+              x="25"
+              y="80"
+              width="450"
+              height="340"
+              rx="14"
+              fill="none"
+              stroke={fgColor}
+              strokeWidth="5"
+              strokeDasharray={strokeDash}
+            />
             {/* Outer Thin Rectangle */}
-            <rect x="35" y="90" width="430" height="320" rx="10" fill="none" stroke={stampColor} strokeWidth="2" />
+            {showSecondaryRing && (
+              <rect x="35" y="90" width="430" height="320" rx="10" fill="none" stroke={fgColor} strokeWidth="2" />
+            )}
             {/* Inner Border Box */}
-            <rect x="55" y="110" width="390" height="280" rx="6" fill="none" stroke={stampColor} strokeWidth="2.5" />
+            <rect x="55" y="110" width="390" height="280" rx="6" fill="none" stroke={fgColor} strokeWidth="2.5" />
 
-            {/* Top Horizontal Dividing Bar */}
-            <line x1="55" y1="170" x2="445" y2="170" stroke={stampColor} strokeWidth="2" />
-            {/* Bottom Horizontal Dividing Bar */}
-            <line x1="55" y1="330" x2="445" y2="330" stroke={stampColor} strokeWidth="2" />
+            {/* Dividing Bars */}
+            <line x1="55" y1="170" x2="445" y2="170" stroke={fgColor} strokeWidth="2" />
+            <line x1="55" y1="330" x2="445" y2="330" stroke={fgColor} strokeWidth="2" />
 
-            {/* Top Arabic Text (Header Box) */}
+            {/* TOP TEXT: ENGLISH HEADER */}
             <text
               x="250"
-              y="150"
-              fontFamily={arabicFont}
+              y="148"
+              fontFamily={englishFont}
               fontWeight="bold"
               fontSize={topFontSize}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
+              letterSpacing="0.8px"
             >
-              {topText}
+              {topEnglishText}
             </text>
 
-            {/* Side Stars on Center Row */}
-            <text x="82" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            {/* Side Stars */}
+            <text x="85" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
-            <text x="418" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            <text x="415" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
+
+            {/* Optional Emblem */}
+            {renderEmblem(250, 195, 0.85)}
 
             {/* Center Content Lines */}
             <text
               x="250"
-              y="235"
+              y={includeEmblem ? 230 : (includeDate ? 210 : 230)}
               fontFamily={englishFont}
               fontWeight="bold"
               fontSize={centerLine1Size}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
               letterSpacing="1px"
             >
               {centerLine1}
             </text>
-            <text
-              x="250"
-              y="280"
-              fontFamily={englishFont}
-              fontWeight="bold"
-              fontSize={centerLine2Size}
-              fill={stampColor}
-              textAnchor="middle"
-              letterSpacing="1px"
-            >
-              {centerLine2}
-            </text>
 
-            {/* Bottom English Text (Footer Box) */}
+            {includeDate ? (
+              <g>
+                <line x1="140" y1="235" x2="360" y2="235" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="256"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={dateFontSize}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1.5px"
+                >
+                  {dateValue}
+                </text>
+                <line x1="140" y1="266" x2="360" y2="266" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="295"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={centerLine2Size * 0.9}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1px"
+                >
+                  {centerLine2}
+                </text>
+              </g>
+            ) : (
+              <text
+                x="250"
+                y={includeEmblem ? 275 : 278}
+                fontFamily={englishFont}
+                fontWeight="bold"
+                fontSize={centerLine2Size}
+                fill={fgColor}
+                textAnchor="middle"
+                letterSpacing="1px"
+              >
+                {centerLine2}
+              </text>
+            )}
+
+            {/* BOTTOM TEXT: ARABIC FOOTER */}
             <text
               x="250"
               y="370"
-              fontFamily={englishFont}
+              fontFamily={arabicFont}
               fontWeight="bold"
               fontSize={bottomFontSize}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
-              letterSpacing="1px"
             >
-              {bottomText}
+              {activeArabicText}
             </text>
           </>
         );
@@ -402,77 +685,127 @@ export default function BilingualStampConstructor() {
       case 'square':
         return (
           <>
+            {invertStamp && (
+              <rect x="35" y="35" width="430" height="430" rx="14" fill={stampColor} />
+            )}
+
             {/* Outer Thick Square */}
-            <rect x="35" y="35" width="430" height="430" rx="14" fill="none" stroke={stampColor} strokeWidth="5" />
+            <rect
+              x="35"
+              y="35"
+              width="430"
+              height="430"
+              rx="14"
+              fill="none"
+              stroke={fgColor}
+              strokeWidth="5"
+              strokeDasharray={strokeDash}
+            />
             {/* Outer Thin Square */}
-            <rect x="45" y="45" width="410" height="410" rx="10" fill="none" stroke={stampColor} strokeWidth="2" />
+            {showSecondaryRing && (
+              <rect x="45" y="45" width="410" height="410" rx="10" fill="none" stroke={fgColor} strokeWidth="2" />
+            )}
             {/* Inner Border Box */}
-            <rect x="68" y="68" width="364" height="364" rx="6" fill="none" stroke={stampColor} strokeWidth="2.5" />
+            <rect x="68" y="68" width="364" height="364" rx="6" fill="none" stroke={fgColor} strokeWidth="2.5" />
 
-            {/* Top Horizontal Dividing Bar */}
-            <line x1="68" y1="145" x2="432" y2="145" stroke={stampColor} strokeWidth="2" />
-            {/* Bottom Horizontal Dividing Bar */}
-            <line x1="68" y1="355" x2="432" y2="355" stroke={stampColor} strokeWidth="2" />
+            {/* Dividing Bars */}
+            <line x1="68" y1="145" x2="432" y2="145" stroke={fgColor} strokeWidth="2" />
+            <line x1="68" y1="355" x2="432" y2="355" stroke={fgColor} strokeWidth="2" />
 
-            {/* Top Arabic Text */}
+            {/* TOP TEXT: ENGLISH HEADER */}
             <text
               x="250"
-              y="120"
-              fontFamily={arabicFont}
+              y="118"
+              fontFamily={englishFont}
               fontWeight="bold"
               fontSize={topFontSize}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
+              letterSpacing="0.8px"
             >
-              {topText}
+              {topEnglishText}
             </text>
 
-            {/* Side Stars on Center Row */}
-            <text x="96" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            {/* Side Stars */}
+            <text x="96" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
-            <text x="404" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            <text x="404" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
+
+            {/* Optional Emblem */}
+            {renderEmblem(250, 185, 0.9)}
 
             {/* Center Content Lines */}
             <text
               x="250"
-              y="235"
+              y={includeEmblem ? 228 : (includeDate ? 205 : 228)}
               fontFamily={englishFont}
               fontWeight="bold"
               fontSize={centerLine1Size}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
               letterSpacing="1px"
             >
               {centerLine1}
             </text>
-            <text
-              x="250"
-              y="285"
-              fontFamily={englishFont}
-              fontWeight="bold"
-              fontSize={centerLine2Size}
-              fill={stampColor}
-              textAnchor="middle"
-              letterSpacing="1px"
-            >
-              {centerLine2}
-            </text>
 
-            {/* Bottom English Text */}
+            {includeDate ? (
+              <g>
+                <line x1="130" y1="230" x2="370" y2="230" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="252"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={dateFontSize}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1.5px"
+                >
+                  {dateValue}
+                </text>
+                <line x1="130" y1="262" x2="370" y2="262" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="295"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={centerLine2Size * 0.9}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1px"
+                >
+                  {centerLine2}
+                </text>
+              </g>
+            ) : (
+              <text
+                x="250"
+                y={includeEmblem ? 280 : 280}
+                fontFamily={englishFont}
+                fontWeight="bold"
+                fontSize={centerLine2Size}
+                fill={fgColor}
+                textAnchor="middle"
+                letterSpacing="1px"
+              >
+                {centerLine2}
+              </text>
+            )}
+
+            {/* BOTTOM TEXT: ARABIC FOOTER */}
             <text
               x="250"
               y="395"
-              fontFamily={englishFont}
+              fontFamily={arabicFont}
               fontWeight="bold"
               fontSize={bottomFontSize}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
-              letterSpacing="1px"
             >
-              {bottomText}
+              {activeArabicText}
             </text>
           </>
         );
@@ -482,69 +815,117 @@ export default function BilingualStampConstructor() {
         return (
           <>
             <defs>
-              {/* Top Curve Path (Clockwise Arc for Top Arabic) */}
+              {/* Top Curve Path (Clockwise Arc for Top English) */}
               <path id="topArcPath" d="M 68,250 A 182,182 0 0,1 432,250" fill="none" />
-              {/* Bottom Curve Path (Left-to-Right Arc for Bottom English) */}
-              <path id="bottomArcPath" d="M 68,250 A 182,182 0 0,0 432,250" fill="none" />
+              {/* Bottom Curve Path (RTL arc: Right 432,250 towards Left 68,250 for Bottom Arabic so letters follow the natural curve) */}
+              <path id="bottomArcPath" d="M 432,250 A 182,182 0 0,1 68,250" fill="none" />
             </defs>
 
-            {/* OUTER DOUBLE RING BORDER */}
-            {/* Outer Thick Ring */}
-            <circle cx="250" cy="250" r="232" fill="none" stroke={stampColor} strokeWidth="5" />
-            {/* Outer Thin Ring */}
-            <circle cx="250" cy="250" r="222" fill="none" stroke={stampColor} strokeWidth="2" />
-            {/* Inner Ring */}
-            <circle cx="250" cy="250" r="150" fill="none" stroke={stampColor} strokeWidth="3" />
+            {invertStamp && (
+              <circle cx="250" cy="250" r="232" fill={stampColor} />
+            )}
 
-            {/* TOP CURVED ARABIC TEXT */}
-            <text fontFamily={arabicFont} fontWeight="bold" fill={stampColor}>
+            {/* Outer Thick Ring */}
+            <circle
+              cx="250"
+              cy="250"
+              r="232"
+              fill="none"
+              stroke={fgColor}
+              strokeWidth="5"
+              strokeDasharray={strokeDash}
+            />
+            {/* Outer Thin Ring */}
+            {showSecondaryRing && (
+              <circle cx="250" cy="250" r="222" fill="none" stroke={fgColor} strokeWidth="2" />
+            )}
+            {/* Inner Ring */}
+            <circle cx="250" cy="250" r="150" fill="none" stroke={fgColor} strokeWidth="3" />
+
+            {/* Optional Emblem */}
+            {renderEmblem(250, 180, 0.95)}
+
+            {/* TOP CURVED ENGLISH TEXT */}
+            <text fontFamily={englishFont} fontWeight="bold" fill={fgColor} letterSpacing="1px">
               <textPath href="#topArcPath" startOffset="50%" textAnchor="middle" id="svgTopText" fontSize={topFontSize}>
-                {topText}
+                {topEnglishText}
               </textPath>
             </text>
 
-            {/* BOTTOM CURVED ENGLISH TEXT */}
-            <text fontFamily={englishFont} fontWeight="bold" fill={stampColor} letterSpacing="1px">
+            {/* BOTTOM CURVED ARABIC TEXT */}
+            <text fontFamily={arabicFont} fontWeight="bold" fill={fgColor}>
               <textPath href="#bottomArcPath" startOffset="50%" textAnchor="middle" id="svgBottomText" fontSize={bottomFontSize}>
-                {bottomText}
+                {activeArabicText}
               </textPath>
             </text>
 
             {/* SIDE SEPARATOR STARS */}
-            <text id="starLeft" x="78" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            <text id="starLeft" x="78" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
-            <text id="starRight" x="422" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={stampColor} textAnchor="middle">
+            <text id="starRight" x="422" y="258" fontFamily="Arial, sans-serif" fontSize={starSize} fill={fgColor} textAnchor="middle">
               {starSymbol}
             </text>
 
-            {/* CENTER CONTENT (LINE 1 & LINE 2) */}
+            {/* CENTER CONTENT */}
             <text
               id="svgCenterLine1"
               x="250"
-              y="228"
+              y={includeEmblem ? 226 : (includeDate ? 204 : 225)}
               fontFamily={englishFont}
               fontWeight="bold"
               fontSize={centerLine1Size}
-              fill={stampColor}
+              fill={fgColor}
               textAnchor="middle"
               letterSpacing="1px"
             >
               {centerLine1}
             </text>
-            <text
-              id="svgCenterLine2"
-              x="250"
-              y="278"
-              fontFamily={englishFont}
-              fontWeight="bold"
-              fontSize={centerLine2Size}
-              fill={stampColor}
-              textAnchor="middle"
-              letterSpacing="1px"
-            >
-              {centerLine2}
-            </text>
+
+            {includeDate ? (
+              <g>
+                <line x1="160" y1="228" x2="340" y2="228" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="248"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={dateFontSize}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1.5px"
+                >
+                  {dateValue}
+                </text>
+                <line x1="160" y1="258" x2="340" y2="258" stroke={fgColor} strokeWidth="1.5" strokeDasharray="4, 3" />
+                <text
+                  x="250"
+                  y="288"
+                  fontFamily={englishFont}
+                  fontWeight="bold"
+                  fontSize={centerLine2Size * 0.9}
+                  fill={fgColor}
+                  textAnchor="middle"
+                  letterSpacing="1px"
+                >
+                  {centerLine2}
+                </text>
+              </g>
+            ) : (
+              <text
+                id="svgCenterLine2"
+                x="250"
+                y={includeEmblem ? 275 : 278}
+                fontFamily={englishFont}
+                fontWeight="bold"
+                fontSize={centerLine2Size}
+                fill={fgColor}
+                textAnchor="middle"
+                letterSpacing="1px"
+              >
+                {centerLine2}
+              </text>
+            )}
           </>
         );
     }
@@ -556,15 +937,51 @@ export default function BilingualStampConstructor() {
       className="flex flex-col md:flex-row h-screen w-full overflow-hidden bg-slate-100 text-slate-800 font-sans"
     >
       {/* ------------------------------------------------------------- */}
-      {/* SIDEBAR CONTROL PANEL (380px fixed width matching HTML) */}
+      {/* SIDEBAR CONTROL PANEL (380px fixed width)                     */}
       {/* ------------------------------------------------------------- */}
       <aside
         id="sidebar-panel"
         className="w-full md:w-[380px] bg-white border-r border-slate-300 flex flex-col h-full shrink-0 shadow-md z-10"
       >
         {/* Header */}
-        <div id="sidebar-header" className="px-5 py-4 bg-slate-900 text-white shrink-0">
-          <h2 className="m-0 text-lg font-semibold tracking-tight">Bilingual Stamp Constructor</h2>
+        <div id="sidebar-header" className="px-5 py-3.5 bg-slate-900 text-white shrink-0">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-base font-semibold tracking-tight">Bilingual Stamp Constructor</h2>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-300">
+              Pro Studio
+            </span>
+          </div>
+        </div>
+
+        {/* Mode Selector Tabs: Normal vs Customize (Advanced) */}
+        <div className="p-3 bg-slate-50 border-b border-slate-200 shrink-0">
+          <div className="flex bg-slate-200/80 p-1 rounded-lg">
+            <button
+              id="mode-normal-btn"
+              onClick={() => setControlMode('normal')}
+              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                controlMode === 'normal'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>Standard Mode</span>
+            </button>
+            <button
+              id="mode-advanced-btn"
+              onClick={() => setControlMode('advanced')}
+              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                controlMode === 'advanced'
+                  ? 'bg-[#0b32a4] text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>Customize (Advanced)</span>
+              <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${controlMode === 'advanced' ? 'bg-blue-900/60 text-blue-100' : 'bg-slate-300 text-slate-700'}`}>
+                +7
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Controls Body */}
@@ -572,7 +989,9 @@ export default function BilingualStampConstructor() {
           id="controls-body"
           className="p-4 overflow-y-auto flex-grow flex flex-col gap-3 scrollbar-thin scrollbar-thumb-slate-300"
         >
-          {/* Card: Stamp Shape Switcher */}
+          {/* ========================================================= */}
+          {/* COMMON: SHAPE & PRESETS (Available in both modes)         */}
+          {/* ========================================================= */}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
             <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
               Stamp Shape
@@ -600,7 +1019,7 @@ export default function BilingualStampConstructor() {
             </div>
           </div>
 
-          {/* Card: Official Stamp Presets */}
+          {/* Official Stamp Presets */}
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
             <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
               Official Template Preset
@@ -619,244 +1038,533 @@ export default function BilingualStampConstructor() {
             </select>
           </div>
 
-          {/* Card 1: Color & Font Style */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Color & Font Style
-            </div>
+          {/* ========================================================= */}
+          {/* NORMAL MODE: CORE ESSENTIAL CONTROLS                      */}
+          {/* ========================================================= */}
+          {controlMode === 'normal' && (
+            <>
+              {/* Card 1: Color & Font Style */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  Color & Font Style
+                </div>
 
-            <div className="flex items-center justify-between">
-              <label htmlFor="stampColor" className="text-xs font-semibold text-slate-700">
-                Ink Color
-              </label>
-            </div>
-            <input
-              type="color"
-              id="stampColor"
-              value={stampColor}
-              onChange={(e) => setStampColor(e.target.value)}
-              className="w-full h-9 border-0 rounded cursor-pointer p-0 bg-transparent"
-            />
+                <div className="flex items-center justify-between">
+                  <label htmlFor="stampColor" className="text-xs font-semibold text-slate-700">
+                    Ink Color
+                  </label>
+                </div>
+                <input
+                  type="color"
+                  id="stampColor"
+                  value={stampColor}
+                  onChange={(e) => setStampColor(e.target.value)}
+                  className="w-full h-9 border-0 rounded cursor-pointer p-0 bg-transparent"
+                />
 
-            <div className="flex items-center justify-between mt-1">
-              <label htmlFor="arabicFont" className="text-xs font-semibold text-slate-700">
-                Arabic Font
-              </label>
-            </div>
-            <select
-              id="arabicFont"
-              value={arabicFont}
-              onChange={(e) => setArabicFont(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
-            >
-              <option value="'Cairo', sans-serif">Cairo (Bold)</option>
-              <option value="Arial, sans-serif">Arial</option>
-              <option value="'Segoe UI', sans-serif">Segoe UI</option>
-              <option value="'Tahoma', sans-serif">Tahoma</option>
-            </select>
+                <div className="flex items-center justify-between mt-1">
+                  <label htmlFor="englishFont" className="text-xs font-semibold text-slate-700">
+                    English Font (Top)
+                  </label>
+                </div>
+                <select
+                  id="englishFont"
+                  value={englishFont}
+                  onChange={(e) => setEnglishFont(e.target.value)}
+                  className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
+                >
+                  <option value="'Roboto Condensed', sans-serif">Roboto Condensed (Default)</option>
+                  <option value="'Oswald', sans-serif">Oswald</option>
+                  <option value="Arial, sans-serif">Arial Bold</option>
+                  <option value="Impact, sans-serif">Impact</option>
+                </select>
 
-            <div className="flex items-center justify-between mt-1">
-              <label htmlFor="englishFont" className="text-xs font-semibold text-slate-700">
-                English Font
-              </label>
-            </div>
-            <select
-              id="englishFont"
-              value={englishFont}
-              onChange={(e) => setEnglishFont(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
-            >
-              <option value="'Roboto Condensed', sans-serif">Roboto Condensed (Default)</option>
-              <option value="'Oswald', sans-serif">Oswald</option>
-              <option value="Arial, sans-serif">Arial Bold</option>
-              <option value="Impact, sans-serif">Impact</option>
-            </select>
-          </div>
+                <div className="flex items-center justify-between mt-1">
+                  <label htmlFor="arabicFont" className="text-xs font-semibold text-slate-700">
+                    Arabic Font (Bottom)
+                  </label>
+                </div>
+                <select
+                  id="arabicFont"
+                  value={arabicFont}
+                  onChange={(e) => setArabicFont(e.target.value)}
+                  className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
+                >
+                  <option value="'Cairo', sans-serif">Cairo (Bold)</option>
+                  <option value="Arial, sans-serif">Arial</option>
+                  <option value="'Segoe UI', sans-serif">Segoe UI</option>
+                  <option value="'Tahoma', sans-serif">Tahoma</option>
+                </select>
+              </div>
 
-          {/* Card 2: Vintage Distress Texture */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Stamp Ink Texture (Vintage Wear)
-            </div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="vintageIntensity" className="text-xs font-semibold text-slate-700">
-                Texture Intensity
-              </label>
-              <span id="vintageVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
-                {vintageIntensity}%
-              </span>
-            </div>
-            <input
-              type="range"
-              id="vintageIntensity"
-              min="0"
-              max="100"
-              value={vintageIntensity}
-              onChange={(e) => setVintageIntensity(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer accent-blue-700"
-            />
-          </div>
+              {/* Card 2: Vintage Distress Texture */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  Stamp Ink Texture (Vintage Wear)
+                </div>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="vintageIntensity" className="text-xs font-semibold text-slate-700">
+                    Texture Intensity
+                  </label>
+                  <span id="vintageVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {vintageIntensity}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="vintageIntensity"
+                  min="0"
+                  max="100"
+                  value={vintageIntensity}
+                  onChange={(e) => setVintageIntensity(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+              </div>
 
-          {/* Card 3: Top Curved / Header Arabic Text */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Top Text (Arabic {shape === 'rectangle' || shape === 'square' ? 'Header' : 'Curve'})
-            </div>
-            <input
-              type="text"
-              id="topText"
-              value={topText}
-              dir="rtl"
-              onChange={(e) => setTopText(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white text-right font-arabic focus:border-blue-700 focus:outline-none"
-            />
-            <div className="flex items-center justify-between">
-              <label htmlFor="topFontSize" className="text-xs font-semibold text-slate-700">
-                Font Size
-              </label>
-              <span id="topSizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
-                {topFontSize}px
-              </span>
-            </div>
-            <input
-              type="range"
-              id="topFontSize"
-              min="14"
-              max="42"
-              value={topFontSize}
-              onChange={(e) => setTopFontSize(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer accent-blue-700"
-            />
-          </div>
+              {/* Card 3: Top Text (English) + Auto-Convert Trigger */}
+              <div className="bg-slate-50 border border-blue-200/80 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold text-blue-900 uppercase tracking-wider">
+                    Top Text (English)
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-[10px] text-slate-600 font-medium cursor-pointer select-none">
+                      Auto-Convert:
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={autoTranslateEnabled}
+                      onChange={(e) => setAutoTranslateEnabled(e.target.checked)}
+                      className="cursor-pointer accent-blue-700 w-3.5 h-3.5"
+                    />
+                  </div>
+                </div>
 
-          {/* Card 4: Bottom Curved / Footer English Text */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Bottom Text (English {shape === 'rectangle' || shape === 'square' ? 'Footer' : 'Curve'})
-            </div>
-            <input
-              type="text"
-              id="bottomText"
-              value={bottomText}
-              onChange={(e) => setBottomText(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
-            />
-            <div className="flex items-center justify-between">
-              <label htmlFor="bottomFontSize" className="text-xs font-semibold text-slate-700">
-                Font Size
-              </label>
-              <span id="bottomSizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
-                {bottomFontSize}px
-              </span>
-            </div>
-            <input
-              type="range"
-              id="bottomFontSize"
-              min="12"
-              max="36"
-              value={bottomFontSize}
-              onChange={(e) => setBottomFontSize(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer accent-blue-700"
-            />
-          </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="topEnglishText"
+                    value={topEnglishText}
+                    onChange={(e) => handleEnglishChange(e.target.value)}
+                    placeholder="Type English company name (e.g. HALAWA)..."
+                    className="w-full p-2 pr-20 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleManualTranslate}
+                    disabled={isTranslating || !topEnglishText.trim()}
+                    className="absolute right-1.5 top-1.5 px-2 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded text-[10px] font-bold flex items-center gap-1 transition cursor-pointer disabled:cursor-not-allowed"
+                    title="Convert English to Arabic (e.g. HALAWA -> حلاوة)"
+                  >
+                    {isTranslating ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3 h-3" />
+                    )}
+                    <span>{isTranslating ? 'Converting' : 'Convert'}</span>
+                  </button>
+                </div>
 
-          {/* Card 5: Center Content Line 1 & Line 2 */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Center Lines
-            </div>
-            <label htmlFor="centerLine1" className="text-xs font-semibold text-slate-700">
-              Line 1 (e.g. P.O. BOX)
-            </label>
-            <input
-              type="text"
-              id="centerLine1"
-              value={centerLine1}
-              onChange={(e) => setCenterLine1(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
-            />
-            <div className="flex items-center justify-between">
-              <label htmlFor="centerLine1Size" className="text-xs font-semibold text-slate-700">
-                Line 1 Size
-              </label>
-              <span id="line1SizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
-                {centerLine1Size}px
-              </span>
-            </div>
-            <input
-              type="range"
-              id="centerLine1Size"
-              min="16"
-              max="50"
-              value={centerLine1Size}
-              onChange={(e) => setCenterLine1Size(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer accent-blue-700"
-            />
+                {translationStatus && (
+                  <div className="text-[10px] text-blue-700 font-medium flex items-center gap-1">
+                    <span>• {translationStatus}</span>
+                  </div>
+                )}
 
-            <label htmlFor="centerLine2" className="text-xs font-semibold text-slate-700 mt-1">
-              Line 2 (e.g. City/Country)
-            </label>
-            <input
-              type="text"
-              id="centerLine2"
-              value={centerLine2}
-              onChange={(e) => setCenterLine2(e.target.value)}
-              className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
-            />
-            <div className="flex items-center justify-between">
-              <label htmlFor="centerLine2Size" className="text-xs font-semibold text-slate-700">
-                Line 2 Size
-              </label>
-              <span id="line2SizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
-                {centerLine2Size}px
-              </span>
-            </div>
-            <input
-              type="range"
-              id="centerLine2Size"
-              min="16"
-              max="50"
-              value={centerLine2Size}
-              onChange={(e) => setCenterLine2Size(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer accent-blue-700"
-            />
-          </div>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="topFontSize" className="text-xs font-semibold text-slate-700">
+                    Font Size
+                  </label>
+                  <span id="topSizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {topFontSize}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="topFontSize"
+                  min="12"
+                  max="38"
+                  value={topFontSize}
+                  onChange={(e) => setTopFontSize(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+              </div>
 
-          {/* Card 6: Side Separators */}
-          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
-            <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Side Separators
-            </div>
-            <div className="flex items-center justify-between gap-2.5">
-              <label htmlFor="starSymbol" className="text-xs font-semibold text-slate-700">
-                Left/Right Symbol
-              </label>
-              <input
-                type="text"
-                id="starSymbol"
-                value={starSymbol}
-                onChange={(e) => setStarSymbol(e.target.value)}
-                className="w-[60px] text-center p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="starSize" className="text-xs font-semibold text-slate-700">
-                Symbol Size
-              </label>
-              <span id="starSizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
-                {starSize}px
-              </span>
-            </div>
-            <input
-              type="range"
-              id="starSize"
-              min="12"
-              max="40"
-              value={starSize}
-              onChange={(e) => setStarSize(parseInt(e.target.value, 10))}
-              className="w-full cursor-pointer accent-blue-700"
-            />
-          </div>
+              {/* Card 4: Bottom Text (Arabic) */}
+              <div className="bg-slate-50 border border-emerald-200/80 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
+                    Bottom Text (Arabic)
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setReverseArabicText(!reverseArabicText)}
+                      className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border transition cursor-pointer ${
+                        reverseArabicText
+                          ? 'bg-amber-100 text-amber-800 border-amber-300'
+                          : 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                      }`}
+                      title="Toggle text direction on curved arc if your browser renders backwards"
+                    >
+                      {reverseArabicText ? 'Mirrored Mode' : 'Standard View'}
+                    </button>
+                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium">
+                      Auto-Linked
+                    </span>
+                  </div>
+                </div>
+
+                <input
+                  type="text"
+                  id="bottomArabicText"
+                  value={bottomArabicText}
+                  dir="rtl"
+                  onChange={(e) => setBottomArabicText(e.target.value)}
+                  placeholder="النص العربي الرسمي..."
+                  className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white text-right font-arabic focus:border-emerald-700 focus:outline-none"
+                />
+
+                <div className="flex items-center justify-between">
+                  <label htmlFor="bottomFontSize" className="text-xs font-semibold text-slate-700">
+                    Font Size
+                  </label>
+                  <span id="bottomSizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {bottomFontSize}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="bottomFontSize"
+                  min="14"
+                  max="42"
+                  value={bottomFontSize}
+                  onChange={(e) => setBottomFontSize(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+              </div>
+
+              {/* Card 5: Center Content Line 1 & Line 2 */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  Center Lines
+                </div>
+                <label htmlFor="centerLine1" className="text-xs font-semibold text-slate-700">
+                  Line 1 (e.g. P.O. BOX)
+                </label>
+                <input
+                  type="text"
+                  id="centerLine1"
+                  value={centerLine1}
+                  onChange={(e) => setCenterLine1(e.target.value)}
+                  className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
+                />
+                <div className="flex items-center justify-between">
+                  <label htmlFor="centerLine1Size" className="text-xs font-semibold text-slate-700">
+                    Line 1 Size
+                  </label>
+                  <span id="line1SizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {centerLine1Size}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="centerLine1Size"
+                  min="16"
+                  max="50"
+                  value={centerLine1Size}
+                  onChange={(e) => setCenterLine1Size(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+
+                <label htmlFor="centerLine2" className="text-xs font-semibold text-slate-700 mt-1">
+                  Line 2 (e.g. City/Country)
+                </label>
+                <input
+                  type="text"
+                  id="centerLine2"
+                  value={centerLine2}
+                  onChange={(e) => setCenterLine2(e.target.value)}
+                  className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
+                />
+                <div className="flex items-center justify-between">
+                  <label htmlFor="centerLine2Size" className="text-xs font-semibold text-slate-700">
+                    Line 2 Size
+                  </label>
+                  <span id="line2SizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {centerLine2Size}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="centerLine2Size"
+                  min="16"
+                  max="50"
+                  value={centerLine2Size}
+                  onChange={(e) => setCenterLine2Size(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+              </div>
+
+              {/* Card 6: Side Separators */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  Side Separators
+                </div>
+                <div className="flex items-center justify-between gap-2.5">
+                  <label htmlFor="starSymbol" className="text-xs font-semibold text-slate-700">
+                    Left/Right Symbol
+                  </label>
+                  <input
+                    type="text"
+                    id="starSymbol"
+                    value={starSymbol}
+                    onChange={(e) => setStarSymbol(e.target.value)}
+                    className="w-[60px] text-center p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="starSize" className="text-xs font-semibold text-slate-700">
+                    Symbol Size
+                  </label>
+                  <span id="starSizeVal" className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {starSize}px
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="starSize"
+                  min="12"
+                  max="40"
+                  value={starSize}
+                  onChange={(e) => setStarSize(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+              </div>
+            </>
+          )}
+
+          {/* ========================================================= */}
+          {/* CUSTOMIZE (ADVANCED) MODE: OPTIONAL RICH FEATURES         */}
+          {/* ========================================================= */}
+          {controlMode === 'advanced' && (
+            <>
+              {/* Advanced 1: Physical Press Simulation (Angle & Opacity) */}
+              <div className="bg-slate-50 border border-blue-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold text-blue-900 uppercase tracking-wider">
+                    Physical Stamp Simulation
+                  </div>
+                  <button
+                    onClick={applyRandomTilt}
+                    className="text-[10px] font-semibold text-blue-700 hover:text-blue-900 underline cursor-pointer"
+                  >
+                    Random Tilt
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <label htmlFor="rotationAngle" className="text-xs font-semibold text-slate-700">
+                    Stamp Rotation Tilt
+                  </label>
+                  <span className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {rotationAngle}°
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="rotationAngle"
+                  min="-25"
+                  max="25"
+                  value={rotationAngle}
+                  onChange={(e) => setRotationAngle(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+
+                <div className="flex items-center justify-between mt-1">
+                  <label htmlFor="inkOpacity" className="text-xs font-semibold text-slate-700">
+                    Ink Opacity / Press Density
+                  </label>
+                  <span className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                    {inkOpacity}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  id="inkOpacity"
+                  min="30"
+                  max="100"
+                  value={inkOpacity}
+                  onChange={(e) => setInkOpacity(parseInt(e.target.value, 10))}
+                  className="w-full cursor-pointer accent-blue-700"
+                />
+              </div>
+
+              {/* Advanced 2: Official Center Date Line */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    Center Official Date
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeDate}
+                      onChange={(e) => setIncludeDate(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-700"></div>
+                  </label>
+                </div>
+
+                {includeDate && (
+                  <div className="flex flex-col gap-2 pt-1 border-t border-slate-200">
+                    <input
+                      type="text"
+                      id="dateValueInput"
+                      value={dateValue}
+                      onChange={(e) => setDateValue(e.target.value)}
+                      placeholder="e.g. 16 SEP 2026"
+                      className="w-full p-2 border border-slate-300 rounded text-[13px] bg-white focus:border-blue-700 focus:outline-none font-mono"
+                    />
+                    <div className="flex gap-1">
+                      {['16 SEP 2026', 'PAID', 'APPROVED', 'RECEIVED'].map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setDateValue(tag)}
+                          className="px-2 py-0.5 text-[10px] font-semibold bg-slate-200 hover:bg-slate-300 rounded text-slate-700 cursor-pointer"
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <label htmlFor="dateFontSize" className="text-xs font-semibold text-slate-700">
+                        Date Font Size
+                      </label>
+                      <span className="text-[11px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">
+                        {dateFontSize}px
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      id="dateFontSize"
+                      min="14"
+                      max="32"
+                      value={dateFontSize}
+                      onChange={(e) => setDateFontSize(parseInt(e.target.value, 10))}
+                      className="w-full cursor-pointer accent-blue-700"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Advanced 3: Official Center Emblem */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                    Official Center Emblem
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeEmblem}
+                      onChange={(e) => setIncludeEmblem(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-700"></div>
+                  </label>
+                </div>
+
+                {includeEmblem && (
+                  <div className="grid grid-cols-4 gap-1.5 pt-1 border-t border-slate-200">
+                    {[
+                      { id: 'eagle', label: 'Falcon' },
+                      { id: 'scales', label: 'Justice' },
+                      { id: 'shield', label: 'Shield' },
+                      { id: 'palm', label: 'Palm' },
+                    ].map((em) => (
+                      <button
+                        key={em.id}
+                        onClick={() => setSelectedEmblem(em.id)}
+                        className={`py-1.5 px-1 rounded text-xs font-semibold border transition cursor-pointer text-center ${
+                          selectedEmblem === em.id
+                            ? 'bg-[#0b32a4] text-white border-[#0b32a4]'
+                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        {em.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Advanced 4: Outer Ring Border Style */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  Border Edge Style
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { id: 'double', label: 'Double' },
+                    { id: 'single', label: 'Single' },
+                    { id: 'dashed', label: 'Dashed' },
+                    { id: 'dotted', label: 'Dotted' },
+                  ].map((b) => (
+                    <button
+                      key={b.id}
+                      onClick={() => setBorderStyle(b.id as BorderStyle)}
+                      className={`py-1.5 px-1 rounded text-xs font-semibold border transition cursor-pointer text-center ${
+                        borderStyle === b.id
+                          ? 'bg-[#0b32a4] text-white border-[#0b32a4]'
+                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                      }`}
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Advanced 5: Special Effects & Presentation */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col gap-2 shadow-xs">
+                <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                  Presentation & Styles
+                </div>
+
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-xs font-semibold text-slate-700">
+                    Solid Fill / Negative Stamp
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={invertStamp}
+                      onChange={(e) => setInvertStamp(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-700"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between py-1 border-t border-slate-200">
+                  <span className="text-xs font-semibold text-slate-700">
+                    Document Letterhead Mockup
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={paperMockup}
+                      onChange={(e) => setPaperMockup(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-8 h-4 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-700"></div>
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Actions Footer */}
@@ -879,55 +1587,143 @@ export default function BilingualStampConstructor() {
       </aside>
 
       {/* ------------------------------------------------------------- */}
-      {/* PREVIEW STAGE (Dot grid + White Card Container) */}
+      {/* PREVIEW STAGE (Dot grid + Paper Document Mockup Container)    */}
       {/* ------------------------------------------------------------- */}
       <main
         id="preview-stage"
-        className="flex-grow flex items-center justify-center overflow-auto p-4"
+        className="flex-grow flex items-center justify-center overflow-auto p-4 sm:p-8"
         style={{
           backgroundImage: 'radial-gradient(#cbd5e1 1.5px, transparent 1.5px)',
           backgroundSize: '24px 24px',
         }}
       >
-        <div
-          id="stamp-card-container"
-          className="bg-white p-6 sm:p-10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center justify-center max-w-full"
-        >
-          <svg
-            ref={svgRef}
-            id="stampSvg"
-            width="500"
-            height="500"
-            viewBox="0 0 500 500"
-            xmlns="http://www.w3.org/2000/svg"
-            className="block max-w-full max-h-[75vh] w-auto h-auto select-none"
+        {paperMockup ? (
+          /* Document Letterhead Simulation Container */
+          <div
+            id="document-mockup"
+            className="bg-[#fcfbf9] w-[520px] max-w-full p-8 rounded-md shadow-[0_15px_35px_rgba(0,0,0,0.12)] border border-slate-200 flex flex-col relative overflow-hidden"
           >
-            <defs>
-              {/* Ink Grunge Texture Filter */}
-              <filter id="grungeFilter" x="0%" y="0%" width="100%" height="100%">
-                <feTurbulence
-                  type="fractalNoise"
-                  id="feTurb"
-                  baseFrequency={freq}
-                  numOctaves="3"
-                  result="noise"
-                />
-                <feColorMatrix
-                  type="matrix"
-                  id="feMatrix"
-                  values={colorMatrixValues}
-                  result="distress"
-                />
-                <feComposite in="SourceGraphic" in2="distress" operator="in" />
-              </filter>
-            </defs>
+            {/* Faux Official Document Header */}
+            <div className="flex justify-between items-center pb-4 border-b-2 border-slate-200 mb-6">
+              <div className="flex flex-col">
+                <span className="font-bold text-xs uppercase tracking-widest text-slate-700">
+                  OFFICIAL COMMERCIAL ATTESTATION
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  REF NO: UAE-DXB-2026/8941
+                </span>
+              </div>
+              <div className="w-8 h-8 rounded-full border border-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                UAE
+              </div>
+            </div>
 
-            {/* Stamp Content Group with Grunge Filter */}
-            <g id="stampGroup" filter={vintageIntensity > 0 ? 'url(#grungeFilter)' : undefined}>
-              {renderStampContent()}
-            </g>
-          </svg>
-        </div>
+            {/* Faux text lines */}
+            <div className="flex flex-col gap-2 mb-6">
+              <div className="h-2.5 bg-slate-200/80 rounded w-full"></div>
+              <div className="h-2.5 bg-slate-200/80 rounded w-11/12"></div>
+              <div className="h-2.5 bg-slate-200/80 rounded w-4/5"></div>
+              <div className="h-2.5 bg-slate-200/80 rounded w-9/12"></div>
+            </div>
+
+            {/* Stamp Positioned Over Document Signature Area */}
+            <div className="flex justify-end items-center my-2">
+              <div className="relative flex flex-col items-center">
+                <div className="text-[11px] font-mono text-slate-400 mb-1">
+                  [ AUTHORIZED SIGNATORY ]
+                </div>
+                <div
+                  style={{
+                    transform: `rotate(${rotationAngle}deg)`,
+                    opacity: inkOpacity / 100,
+                    transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
+                  }}
+                >
+                  <svg
+                    ref={svgRef}
+                    id="stampSvg"
+                    width="320"
+                    height="320"
+                    viewBox="0 0 500 500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="block select-none"
+                  >
+                    <defs>
+                      <filter id="grungeFilter" x="0%" y="0%" width="100%" height="100%">
+                        <feTurbulence
+                          type="fractalNoise"
+                          id="feTurb"
+                          baseFrequency={freq}
+                          numOctaves="3"
+                          result="noise"
+                        />
+                        <feColorMatrix
+                          type="matrix"
+                          id="feMatrix"
+                          values={colorMatrixValues}
+                          result="distress"
+                        />
+                        <feComposite in="SourceGraphic" in2="distress" operator="in" />
+                      </filter>
+                    </defs>
+                    <g id="stampGroup" filter={vintageIntensity > 0 ? 'url(#grungeFilter)' : undefined}>
+                      {renderStampContent()}
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-3 border-t border-slate-200 flex justify-between text-[9px] text-slate-400 font-mono">
+              <span>SECURITY DOCUMENT GRADE A</span>
+              <span>DUBAI - UNITED ARAB EMIRATES</span>
+            </div>
+          </div>
+        ) : (
+          /* Standard White Card Canvas Container */
+          <div
+            id="stamp-card-container"
+            className="bg-white p-6 sm:p-10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] flex items-center justify-center max-w-full transition-all"
+            style={{
+              transform: `rotate(${rotationAngle}deg)`,
+              opacity: inkOpacity / 100,
+              transition: 'transform 0.15s ease-out, opacity 0.15s ease-out',
+            }}
+          >
+            <svg
+              ref={svgRef}
+              id="stampSvg"
+              width="500"
+              height="500"
+              viewBox="0 0 500 500"
+              xmlns="http://www.w3.org/2000/svg"
+              className="block max-w-full max-h-[75vh] w-auto h-auto select-none"
+            >
+              <defs>
+                <filter id="grungeFilter" x="0%" y="0%" width="100%" height="100%">
+                  <feTurbulence
+                    type="fractalNoise"
+                    id="feTurb"
+                    baseFrequency={freq}
+                    numOctaves="3"
+                    result="noise"
+                  />
+                  <feColorMatrix
+                    type="matrix"
+                    id="feMatrix"
+                    values={colorMatrixValues}
+                    result="distress"
+                  />
+                  <feComposite in="SourceGraphic" in2="distress" operator="in" />
+                </filter>
+              </defs>
+
+              <g id="stampGroup" filter={vintageIntensity > 0 ? 'url(#grungeFilter)' : undefined}>
+                {renderStampContent()}
+              </g>
+            </svg>
+          </div>
+        )}
       </main>
     </div>
   );
