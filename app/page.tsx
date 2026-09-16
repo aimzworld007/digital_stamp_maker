@@ -177,7 +177,9 @@ export default function BilingualStampConstructor() {
   const [autoTranslateEnabled, setAutoTranslateEnabled] = useState<boolean>(true);
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
   const [translationStatus, setTranslationStatus] = useState<string>('');
-  const [reverseArabicText, setReverseArabicText] = useState<boolean>(false);
+  // Arabic curved arc controls: upright view & natural Right-to-Left Arabic flow
+  const [arabicReadingOrder, setArabicReadingOrder] = useState<'rtl' | 'ltr'>('rtl');
+  const [arabicArcOrientation, setArabicArcOrientation] = useState<'upright' | 'inverted'>('upright');
   const translationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Center Content Lines
@@ -430,10 +432,18 @@ export default function BilingualStampConstructor() {
   // -------------------------------------------------------------
   const renderStampContent = () => {
     const showSecondaryRing = borderStyle === 'double';
-    // If reverseArabicText is toggled, reverse the characters (supports grapheme clustering)
-    const activeArabicText = reverseArabicText
-      ? Array.from(bottomArabicText).reverse().join('')
-      : bottomArabicText;
+    const isUprightArc = arabicArcOrientation === 'upright';
+
+    // Compute curved Arabic text:
+    // On an upright LTR SVG path (sweep=0), reversing the word order places the first Arabic word
+    // on the visual Right side of the bottom arc, so an Arabic speaker reads naturally from Right to Left!
+    const activeCurvedArabicText = (() => {
+      if (!bottomArabicText) return '';
+      if (arabicReadingOrder === 'rtl') {
+        return bottomArabicText.trim().split(/\s+/).reverse().join(' ');
+      }
+      return bottomArabicText;
+    })();
 
     switch (shape) {
       case 'oval':
@@ -442,8 +452,12 @@ export default function BilingualStampConstructor() {
             <defs>
               {/* Top Oval Arc for English (Clockwise) */}
               <path id="topOvalArc" d="M 60,250 A 190,125 0 0,1 440,250" fill="none" />
-              {/* Bottom Oval Arc for Arabic (RTL curve from Right to Left) */}
-              <path id="bottomOvalArc" d="M 440,250 A 190,125 0 0,1 60,250" fill="none" />
+              {/* Bottom Oval Arc for Arabic: Upright arc (sweep=0) or legacy inverted arc */}
+              {isUprightArc ? (
+                <path id="bottomOvalArc" d="M 45,250 A 205,140 0 0,0 455,250" fill="none" />
+              ) : (
+                <path id="bottomOvalArc" d="M 440,250 A 190,125 0 0,1 60,250" fill="none" />
+              )}
             </defs>
 
             {/* Inverted Background fill if enabled */}
@@ -479,10 +493,10 @@ export default function BilingualStampConstructor() {
               </textPath>
             </text>
 
-            {/* BOTTOM TEXT: ARABIC CURVE */}
+            {/* BOTTOM TEXT: ARABIC CURVE (Upright & Right-to-Left aligned) */}
             <text fontFamily={arabicFont} fontWeight="bold" fill={fgColor}>
               <textPath href="#bottomOvalArc" startOffset="50%" textAnchor="middle" fontSize={bottomFontSize}>
-                {activeArabicText}
+                {activeCurvedArabicText}
               </textPath>
             </text>
 
@@ -676,8 +690,9 @@ export default function BilingualStampConstructor() {
               fontSize={bottomFontSize}
               fill={fgColor}
               textAnchor="middle"
+              direction="rtl"
             >
-              {activeArabicText}
+              {bottomArabicText}
             </text>
           </>
         );
@@ -804,8 +819,9 @@ export default function BilingualStampConstructor() {
               fontSize={bottomFontSize}
               fill={fgColor}
               textAnchor="middle"
+              direction="rtl"
             >
-              {activeArabicText}
+              {bottomArabicText}
             </text>
           </>
         );
@@ -817,8 +833,12 @@ export default function BilingualStampConstructor() {
             <defs>
               {/* Top Curve Path (Clockwise Arc for Top English) */}
               <path id="topArcPath" d="M 68,250 A 182,182 0 0,1 432,250" fill="none" />
-              {/* Bottom Curve Path (RTL arc: Right 432,250 towards Left 68,250 for Bottom Arabic so letters follow the natural curve) */}
-              <path id="bottomArcPath" d="M 432,250 A 182,182 0 0,1 68,250" fill="none" />
+              {/* Bottom Curve Path: Upright Arc (sweep=0) or legacy inverted arc */}
+              {isUprightArc ? (
+                <path id="bottomArcPath" d="M 45,250 A 205,205 0 0,0 455,250" fill="none" />
+              ) : (
+                <path id="bottomArcPath" d="M 432,250 A 182,182 0 0,1 68,250" fill="none" />
+              )}
             </defs>
 
             {invertStamp && (
@@ -852,10 +872,10 @@ export default function BilingualStampConstructor() {
               </textPath>
             </text>
 
-            {/* BOTTOM CURVED ARABIC TEXT */}
+            {/* BOTTOM CURVED ARABIC TEXT (Upright & Right-to-Left aligned) */}
             <text fontFamily={arabicFont} fontWeight="bold" fill={fgColor}>
               <textPath href="#bottomArcPath" startOffset="50%" textAnchor="middle" id="svgBottomText" fontSize={bottomFontSize}>
-                {activeArabicText}
+                {activeCurvedArabicText}
               </textPath>
             </text>
 
@@ -1196,23 +1216,40 @@ export default function BilingualStampConstructor() {
                   <div className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">
                     Bottom Text (Arabic)
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setReverseArabicText(!reverseArabicText)}
-                      className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border transition cursor-pointer ${
-                        reverseArabicText
-                          ? 'bg-amber-100 text-amber-800 border-amber-300'
-                          : 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                      }`}
-                      title="Toggle text direction on curved arc if your browser renders backwards"
-                    >
-                      {reverseArabicText ? 'Mirrored Mode' : 'Standard View'}
-                    </button>
-                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-medium">
-                      Auto-Linked
-                    </span>
-                  </div>
+                  <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">
+                    ✓ Upright & Natural RTL
+                  </span>
+                </div>
+
+                {/* Direct Controls for Arabic Orientation & Reading Flow */}
+                <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setArabicReadingOrder(arabicReadingOrder === 'rtl' ? 'ltr' : 'rtl')}
+                    className={`text-[9.5px] py-1 px-1.5 rounded font-semibold border transition cursor-pointer flex items-center justify-center gap-1 ${
+                      arabicReadingOrder === 'rtl'
+                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                    }`}
+                    title="Toggle between Right-to-Left (Official Arabic standard) and Left-to-Right (Clockwise)"
+                  >
+                    <span>Flow:</span>
+                    <span className="font-bold">{arabicReadingOrder === 'rtl' ? 'Right → Left' : 'Left → Right'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setArabicArcOrientation(arabicArcOrientation === 'upright' ? 'inverted' : 'upright')}
+                    className={`text-[9.5px] py-1 px-1.5 rounded font-semibold border transition cursor-pointer flex items-center justify-center gap-1 ${
+                      arabicArcOrientation === 'upright'
+                        ? 'bg-blue-700 text-white border-blue-700 shadow-xs'
+                        : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
+                    }`}
+                    title="Toggle between Upright readable text and Inverted rim text"
+                  >
+                    <span>Arc:</span>
+                    <span className="font-bold">{arabicArcOrientation === 'upright' ? 'Upright' : 'Inverted'}</span>
+                  </button>
                 </div>
 
                 <input
