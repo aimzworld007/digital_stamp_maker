@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useMemo } from 'react';
+import { Sparkles, Loader2, Upload, Image as ImageIcon, X } from 'lucide-react';
 
 // Supported Stamp Shapes
 export type StampShape = 'circle' | 'rectangle' | 'oval' | 'square';
@@ -47,11 +47,94 @@ export default function BilingualStampConstructor() {
   const [centerLine1Size, setCenterLine1Size] = useState<number>(32);
   const [centerLine2, setCenterLine2] = useState<string>('DUBAI - UAE');
   const [centerLine2Size, setCenterLine2Size] = useState<number>(30);
+
+  // Optional Center Uploaded Logo / Graphic
+  const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
+  const [logoSize, setLogoSize] = useState<number>(70);
+  const [logoOffsetY, setLogoOffsetY] = useState<number>(0);
+  const [logoColorMode, setLogoColorMode] = useState<'stamp' | 'original'>('stamp');
+  const [showCenterLinesWithLogo, setShowCenterLinesWithLogo] = useState<boolean>(true);
+  const [isDraggingLogo, setIsDraggingLogo] = useState<boolean>(false);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleLogoFile = (file: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      if (result) {
+        setUploadedLogo(result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleLogoFile(e.target.files[0]);
+    }
+  };
+
+  const handleLogoDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingLogo(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleLogoFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  // Side Separators (Left & Right)
   const [starSymbol, setStarSymbol] = useState<string>('★');
   const [starSize, setStarSize] = useState<number>(26);
-  // Side Separators alignment adjust: Left to Right (spacing/offset) and Up to Down (vertical offset)
+  // Auto-adjust side separators dynamically based on Top (English) & Bottom (Arabic) text
+  const [autoAdjustSeparators, setAutoAdjustSeparators] = useState<boolean>(true);
+  // Side Separators manual fine-tuning: Left to Right (spacing/offset) and Up to Down (vertical offset)
   const [starOffsetX, setStarOffsetX] = useState<number>(0); // -40 (closer/inward) to +40 (wider/outward)
   const [starOffsetY, setStarOffsetY] = useState<number>(0); // -50 (up) to +50 (down)
+
+  // Auto-adjustment calculation based on Top Text (English) and Bottom Text (Arabic) length & font sizes
+  const autoSeparatorOffsets = useMemo(() => {
+    if (!autoAdjustSeparators) {
+      return { autoX: 0, autoY: 0, topExtent: 0, bottomExtent: 0 };
+    }
+
+    const topChars = topEnglishText ? topEnglishText.trim().length : 0;
+    const bottomChars = bottomArabicText ? bottomArabicText.trim().length : 0;
+
+    // Approximate rendered arc length in pixels
+    const topExtent = topChars * (topFontSize * 0.58);
+    const bottomExtent = bottomChars * (bottomFontSize * 0.64);
+
+    // Difference between top and bottom extent:
+    // If top text is longer than bottom text, the visual gap shifts down (+Y)
+    // If bottom text is longer than top text, the visual gap shifts up (-Y)
+    const diff = topExtent - bottomExtent;
+    const autoY = Math.round(Math.max(-28, Math.min(28, diff * 0.085)));
+
+    // Perimeter occupied:
+    const totalOccupied = topExtent + bottomExtent;
+    let autoX = 0;
+    if (totalOccupied > 460) {
+      // Long text: push separators outward slightly to prevent overlapping text ends
+      autoX = Math.round(Math.min(22, (totalOccupied - 460) * 0.065));
+    } else if (totalOccupied < 260 && totalOccupied > 0) {
+      // Short text: draw separators inward slightly for optimal aesthetic balance
+      autoX = Math.round(Math.max(-16, (totalOccupied - 260) * 0.06));
+    }
+
+    return {
+      autoX,
+      autoY,
+      topExtent: Math.round(topExtent),
+      bottomExtent: Math.round(bottomExtent),
+    };
+  }, [autoAdjustSeparators, topEnglishText, topFontSize, bottomArabicText, bottomFontSize]);
+
+  const effectiveOffsetX = autoSeparatorOffsets.autoX + starOffsetX;
+  const effectiveOffsetY = autoSeparatorOffsets.autoY + starOffsetY;
 
   // -------------------------------------------------------------
   // ADVANCED / CUSTOMIZE MODE FEATURES (OPTIONAL)
